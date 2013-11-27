@@ -1,24 +1,24 @@
 package framework;
 
-import playlist.Operation;
+import playlist.operations.Operation;
 
 public class BayouMessage {
-    int src;
+    ProcessId src;
     
-    public BayouMessage(int src) {
+    public BayouMessage(ProcessId src) {
         this.src = src;
     }
 }
 
 class RetireMessage extends BayouMessage {
-    public RetireMessage (int src) {
+    public RetireMessage (ProcessId src) {
         super(src);
     }
 }
 
 class ActionMessage extends BayouMessage {
     Operation op;
-    public ActionMessage (int src, Operation op) {
+    public ActionMessage (ProcessId src, Operation op) {
         super(src);
         this.op = op;
     }

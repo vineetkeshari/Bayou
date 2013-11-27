@@ -5,7 +5,7 @@ import playlist.Playlist;
 public class Node extends Thread {
     private static final long DELAY = 0;
     
-    int pID;
+    ProcessId pID;
     Env env;
     Queue<BayouMessage> inbox = new Queue<BayouMessage>();
     
@@ -14,7 +14,7 @@ public class Node extends Thread {
     boolean ignoring = false;
     boolean paused = false;
     
-    public Node(int pID, Env env) {
+    public Node(ProcessId pID, Env env) {
         this.pID = pID;
         this.env = env;
     }
@@ -44,8 +44,10 @@ public class Node extends Thread {
     private void handle (BayouMessage msg) {
         if (msg instanceof RetireMessage) {
             RetireMessage m = (RetireMessage)msg;
-            if (m.src == 0)
+            if (m.src.equals("ENV"))
                 retire();
+        } else if (msg instanceof ActionMessage) {
+            ActionMessage m = (ActionMessage)msg;
         }
         
         
@@ -64,7 +66,7 @@ public class Node extends Thread {
         return inbox.bdequeue();
     }
     
-    private void sendMessage(int dst, BayouMessage msg) {
+    private void sendMessage(ProcessId dst, BayouMessage msg) {
         env.sendMessage(dst, msg);
         delay();
     }
@@ -94,7 +96,7 @@ public class Node extends Thread {
     
     @Override
     public int hashCode () {
-        return pID;
+        return pID.hashCode();
     }
     
     private void print (String s) {

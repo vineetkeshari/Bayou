@@ -1,6 +1,9 @@
 package framework;
 
+import playlist.operations.*;
+
 public class InputParser {
+    private static final ProcessId pID = new ProcessId("PARSER");
     public static boolean parseInput (String input, Env env) {
         if (input == null)
             return false;
@@ -19,29 +22,55 @@ public class InputParser {
             }
         } else if (parts.length == 2) {
             if (parts[0].equals("JOIN")) {
-                env.addNode(Integer.parseInt(parts[1]));
+                env.addNode(generatePID(Integer.parseInt(parts[1])));
             } else if (parts[0].equals("LEAVE")) {
-                env.retire(Integer.parseInt(parts[1]));
+                env.retire(generatePID(Integer.parseInt(parts[1])));
             } else if (parts[0].equals("ISOLATE")) {
-                env.isolate(Integer.parseInt(parts[1]));
+                env.isolate(generatePID(Integer.parseInt(parts[1])));
             } else if (parts[0].equals("RECONNECT")) {
-                env.reconnect(Integer.parseInt(parts[1]));
+                env.reconnect(generatePID(Integer.parseInt(parts[1])));
             } else if (parts[0].equals("PRINTLOG")) {
-                env.printLog(Integer.parseInt(parts[1]));
+                env.printLog(generatePID(Integer.parseInt(parts[1])));
             } else if (parts[0].equals("CONNECT")) {
-                env.connect(Integer.parseInt(parts[1]));
+                env.connect(generatePID(Integer.parseInt(parts[1])));
+            } else if (parts[0].equals("DO")) {
+                if (env.nodes.containsKey(env.connected)) {
+                    env.sendMessage(env.connected, new ActionMessage (pID, new RemoveOperation (input, parts[1])));
+                } else {
+                    print("No connected process!");
+                }
             }
         } else if (parts.length == 3) {
             if (parts[0].equals("BREAK")) {
-                env.breakConnection (Integer.parseInt(parts[1]), Integer.parseInt(parts[2]));
+                env.breakConnection (generatePID(Integer.parseInt(parts[1])), generatePID(Integer.parseInt(parts[2])));
             } else if (parts[0].equals("RECOVER")) {
-                env.recoverConnection (Integer.parseInt(parts[1]), Integer.parseInt(parts[2]));
+                env.recoverConnection (generatePID(Integer.parseInt(parts[1])), generatePID(Integer.parseInt(parts[2])));
+            } else if (parts[0].equals("DO")) {
+                if (env.nodes.containsKey(env.connected)) {
+                    env.sendMessage(env.connected, new ActionMessage (pID, new AddOperation (input, parts[1], parts[2])));
+                } else {
+                    print("No connected process!");
+                }
             }
         } else if (parts.length == 4) {
-            
+            if (parts[0].equals("DO")) {
+                if (env.nodes.containsKey(env.connected)) {
+                    env.sendMessage(env.connected, new ActionMessage (pID, new EditOperation (input, parts[1], parts[2], parts[3])));
+                } else {
+                    print("No connected process!");
+                }
+            }
         }
         
         return true;
+    }
+    
+    private static ProcessId generatePID (int pID) {
+        return new ProcessId ("Process:" + pID);
+    }
+    
+    private static void print (String s) {
+        System.out.println ("[PARSER]\t" + s);
     }
 
 }
