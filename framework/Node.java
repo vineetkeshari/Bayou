@@ -29,13 +29,14 @@ public class Node extends Thread {
         while (true) {
             while (paused) {
                 try {
-                    wait();
+                    if (paused)
+                        wait();
                 } catch(InterruptedException e) {
                     print("InterruptedException in pause!");
                 }
             }
             BayouMessage msg = getNextMessage();
-            if (msg != null) {
+            if (msg != null && (!ignoring || msg.src.equals(new ProcessId("ENV")))) {
                 handle(msg);
             }
         }
@@ -100,7 +101,7 @@ public class Node extends Thread {
     }
     
     private void print (String s) {
-        System.out.println("[" + pID + "]\t" + s);
+        System.out.println("[" + pID + "]\t" + System.currentTimeMillis() + "\t" + s);
     }
     
 }

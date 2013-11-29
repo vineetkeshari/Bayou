@@ -6,12 +6,14 @@ import java.io.InputStreamReader;
 import java.util.*;
 
 public class Env {
+    
+    private static final ProcessId pID = new ProcessId("ENV");
+    
     public static void main (String[] args) {
+        System.out.println(pID.equals(new ProcessId("ENV")));
         Env env = new Env();
         env.run(args);
     }
-    
-    private static final ProcessId pID = new ProcessId("ENV");
     
     Map<ProcessId, Node> nodes = new HashMap<ProcessId, Node>();
     BufferedReader  reader;
@@ -72,6 +74,7 @@ public class Env {
         paused = false;
         for (ProcessId pID : nodes.keySet()) {
             nodes.get(pID).paused = false;
+            nodes.get(pID).notify();
         }
         print ("Environment Unpaused");
     }
@@ -132,7 +135,7 @@ public class Env {
     }
     
     private void print (String s) {
-        System.out.println("[ENV]\t" + s);
+        System.out.println("[ENV]\t" + System.currentTimeMillis() + "\t" + s);
     }
     
     private void die() {

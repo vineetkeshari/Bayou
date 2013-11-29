@@ -3,7 +3,7 @@ package framework;
 import playlist.operations.*;
 
 public class InputParser {
-    private static final ProcessId pID = new ProcessId("PARSER");
+    private static final ProcessId pID = new ProcessId("ENV");
     public static boolean parseInput (String input, Env env) {
         if (input == null)
             return false;
@@ -33,7 +33,7 @@ public class InputParser {
                 env.printLog(generatePID(Integer.parseInt(parts[1])));
             } else if (parts[0].equals("CONNECT")) {
                 env.connect(generatePID(Integer.parseInt(parts[1])));
-            } else if (parts[0].equals("DO")) {
+            } else if (parts[0].equals("REMOVE")) {
                 if (env.nodes.containsKey(env.connected)) {
                     env.sendMessage(env.connected, new ActionMessage (pID, new RemoveOperation (input, parts[1])));
                 } else {
@@ -45,7 +45,7 @@ public class InputParser {
                 env.breakConnection (generatePID(Integer.parseInt(parts[1])), generatePID(Integer.parseInt(parts[2])));
             } else if (parts[0].equals("RECOVER")) {
                 env.recoverConnection (generatePID(Integer.parseInt(parts[1])), generatePID(Integer.parseInt(parts[2])));
-            } else if (parts[0].equals("DO")) {
+            } else if (parts[0].equals("ADD")) {
                 if (env.nodes.containsKey(env.connected)) {
                     env.sendMessage(env.connected, new ActionMessage (pID, new AddOperation (input, parts[1], parts[2])));
                 } else {
@@ -53,7 +53,7 @@ public class InputParser {
                 }
             }
         } else if (parts.length == 4) {
-            if (parts[0].equals("DO")) {
+            if (parts[0].equals("EDIT")) {
                 if (env.nodes.containsKey(env.connected)) {
                     env.sendMessage(env.connected, new ActionMessage (pID, new EditOperation (input, parts[1], parts[2], parts[3])));
                 } else {
@@ -70,7 +70,7 @@ public class InputParser {
     }
     
     private static void print (String s) {
-        System.out.println ("[PARSER]\t" + s);
+        System.out.println ("[PARSER]\t" + System.currentTimeMillis() + "\t" + s);
     }
 
 }
