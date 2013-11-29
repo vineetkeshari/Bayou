@@ -3,7 +3,7 @@ package framework;
 import playlist.operations.*;
 
 public class InputParser {
-    private static final ProcessId pID = new ProcessId("ENV");
+    private static final ProcessId pID = new ProcessId("ENV", false);
     public static boolean parseInput (String input, Env env) {
         if (input == null)
             return false;
@@ -35,7 +35,7 @@ public class InputParser {
                 env.connect(generatePID(Integer.parseInt(parts[1])));
             } else if (parts[0].equals("REMOVE")) {
                 if (env.nodes.containsKey(env.connected)) {
-                    env.sendMessage(env.connected, new ActionMessage (pID, new RemoveOperation (input, parts[1])));
+                    env.sendMessage(env.connected, new ActionMessage (pID, new Update (new RemoveOperation (input, parts[1]))));
                 } else {
                     print("No connected process!");
                 }
@@ -47,7 +47,7 @@ public class InputParser {
                 env.recoverConnection (generatePID(Integer.parseInt(parts[1])), generatePID(Integer.parseInt(parts[2])));
             } else if (parts[0].equals("ADD")) {
                 if (env.nodes.containsKey(env.connected)) {
-                    env.sendMessage(env.connected, new ActionMessage (pID, new AddOperation (input, parts[1], parts[2])));
+                    env.sendMessage(env.connected, new ActionMessage (pID, new Update (new AddOperation (input, parts[1], parts[2]))));
                 } else {
                     print("No connected process!");
                 }
@@ -55,7 +55,7 @@ public class InputParser {
         } else if (parts.length == 4) {
             if (parts[0].equals("EDIT")) {
                 if (env.nodes.containsKey(env.connected)) {
-                    env.sendMessage(env.connected, new ActionMessage (pID, new EditOperation (input, parts[1], parts[2], parts[3])));
+                    env.sendMessage(env.connected, new ActionMessage (pID, new Update (new EditOperation (input, parts[1], parts[2], parts[3]))));
                 } else {
                     print("No connected process!");
                 }
@@ -66,7 +66,7 @@ public class InputParser {
     }
     
     private static ProcessId generatePID (int pID) {
-        return new ProcessId ("Process:" + pID);
+        return new ProcessId ("Process:" + pID, false);
     }
     
     private static void print (String s) {

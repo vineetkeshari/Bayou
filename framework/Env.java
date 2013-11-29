@@ -6,27 +6,28 @@ import java.io.InputStreamReader;
 import java.util.*;
 
 public class Env {
-    
-    private static final ProcessId pID = new ProcessId("ENV");
+    public static final long DELAY = 0;
+    private static final ProcessId pID = new ProcessId("ENV", false);
     
     public static void main (String[] args) {
-        System.out.println(pID.equals(new ProcessId("ENV")));
         Env env = new Env();
         env.run(args);
     }
     
     Map<ProcessId, Node> nodes = new HashMap<ProcessId, Node>();
+    Map<ProcessId, AntiEntropy> AEs = new HashMap<ProcessId, AntiEntropy>();
     BufferedReader  reader;
     ProcessId connected;
     boolean paused = false;
-    Map<ProcessId, Set<ProcessId>> ignore = new HashMap<ProcessId, Set<ProcessId>>();
     
     public Env () {
         reader = new BufferedReader (new InputStreamReader (System.in));
     }
     
     public synchronized void sendMessage (ProcessId dst, BayouMessage m) {
-        if (nodes.containsKey(dst) && !nodes.get(dst).ignoring && !ignore.get(dst).contains(m.src)) {
+        if (AEs.containsKey(dst) && AEs.get(dst).alive) {
+            AEs.get(dst).deliver(m);
+        } else if (nodes.containsKey(dst) && nodes.get(dst).alive) {
             nodes.get(dst).deliver(m);
         }
     }
@@ -38,7 +39,6 @@ public class Env {
         }
         Node newNode = new Node(pID, this);
         nodes.put(pID, newNode);
-        ignore.put(pID, new HashSet<ProcessId>());
         print("Added node:\t" + pID);
         newNode.start();
     }
@@ -81,15 +81,15 @@ public class Env {
     
     public synchronized void breakConnection (ProcessId p1, ProcessId p2) {
         if (nodes.containsKey(p1) && nodes.containsKey(p2)) {
-            ignore.get(p1).add(p2);
-            ignore.get(p2).add(p1);
+            nodes.get(p1).microIgnore.add(p2);
+            nodes.get(p2).microIgnore.add(p1);
         }
     }
     
     public synchronized void recoverConnection (ProcessId p1, ProcessId p2) {
         if (nodes.containsKey(p1) && nodes.containsKey(p2)) {
-            ignore.get(p1).remove(p2);
-            ignore.get(p2).remove(p1);
+            nodes.get(p1).microIgnore.remove(p2);
+            nodes.get(p2).microIgnore.remove(p1);
         }
     }
     

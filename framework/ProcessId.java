@@ -2,8 +2,12 @@ package framework;
 
 public class ProcessId implements Comparable {
 	String name;
+	boolean isAE;
 
-	public ProcessId(String name){ this.name = name; }
+	public ProcessId(String name, boolean isAE) {
+	    this.name = name;
+	    this.isAE = isAE;
+	}
 
 	public boolean equals(Object other){
 		return name.equals(((ProcessId) other).name);

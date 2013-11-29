@@ -3,6 +3,7 @@ package playlist.operations;
 import playlist.Playlist;
 
 public abstract class Operation {
+    private final long created = System.currentTimeMillis();
     String text;
     
     public Operation (String text) {
@@ -20,7 +21,16 @@ public abstract class Operation {
     }
     
     public int hashCode() {
-        return text.hashCode();
+        return text.hashCode() + Long.valueOf(created).hashCode();
+    }
+    
+    public boolean equals(Object other) {
+        if (!(other instanceof Operation))
+            return false;
+        else {
+            Operation o = (Operation)other;
+            return text.equals(o.text) && created == o.created;
+        }
     }
 }
 

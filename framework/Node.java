@@ -1,18 +1,29 @@
 package framework;
 
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.TreeSet;
+
 import playlist.Playlist;
 
 public class Node extends Thread {
-    private static final long DELAY = 0;
-    
+    private final long created = System.currentTimeMillis();
     ProcessId pID;
     Env env;
     Queue<BayouMessage> inbox = new Queue<BayouMessage>();
+    Set<ProcessId> microIgnore = new HashSet<ProcessId>();
     
     Playlist db = new Playlist();
+    VectorClock vectorClock = new VectorClock();
+    Set<Update> log = new TreeSet<Update>();
     
     boolean ignoring = false;
     boolean paused = false;
+    boolean alive = true;
     
     public Node(ProcessId pID, Env env) {
         this.pID = pID;
@@ -26,41 +37,72 @@ public class Node extends Thread {
     }
     
     private void body() {
-        while (true) {
+        while (alive) {
             while (paused) {
                 try {
-                    if (paused)
-                        wait();
+                    wait();
                 } catch(InterruptedException e) {
                     print("InterruptedException in pause!");
                 }
             }
             BayouMessage msg = getNextMessage();
-            if (msg != null && (!ignoring || msg.src.equals(new ProcessId("ENV")))) {
+            if (msg != null && canAccept(msg)) {
                 handle(msg);
             }
         }
     }
     
+    private boolean canAccept (BayouMessage msg) {
+        if (msg.src.isAE)
+            return (!ignoring && !microIgnore.contains(env.AEs.get(msg.src).parent));
+        else
+            return (!ignoring && !microIgnore.contains(msg.src)) || msg.src.equals(new ProcessId("ENV", false));
+    }
+    
     private void handle (BayouMessage msg) {
         if (msg instanceof RetireMessage) {
             RetireMessage m = (RetireMessage)msg;
+            print(m.toString());
             if (m.src.equals("ENV"))
                 retire();
+        } else if (msg instanceof GetStateMessage) {
+            GetStateMessage m = (GetStateMessage)msg;
+            print(m.toString());
+            env.sendMessage(m.src, new StateMessage(pID, vectorClock));
         } else if (msg instanceof ActionMessage) {
             ActionMessage m = (ActionMessage)msg;
+            print(m.toString());
+            write (m.src, m.update);
+            for (ProcessId p : env.nodes.keySet()) {
+                if (!p.equals(pID)) {
+                    new AntiEntropy (this, p, env).start();
+                }
+            }
+        } else if (msg instanceof ActionUpdateMessage) {
+            ActionUpdateMessage m = (ActionUpdateMessage)msg;
+            print(m.toString());
+            write (m.srcNode, m.update);
         }
         
         
         
     }
     
+    private void write (ProcessId updateSrc, Update update) {
+        if (log.add(update))
+            update.operation.perform(db);
+        vectorClock.put(updateSrc, update.created);
+    }
+    
     private void retire () {
-        
+        alive = false;
     }
     
     public void printLog () {
-        
+        print ("LOG:");
+        for (Update u : log) {
+            System.out.println("\t\t\t" + u.created + "\t" + u.operation);
+        }
     }
     
     private BayouMessage getNextMessage() {
@@ -78,7 +120,7 @@ public class Node extends Thread {
     
     private void delay() {
         try {
-            Thread.sleep(DELAY);
+            Thread.sleep(env.DELAY);
         } catch (InterruptedException e) {
             print("InterruptedException is sleep!");
         }
@@ -89,15 +131,18 @@ public class Node extends Thread {
     }
     
     @Override
-    public boolean equals (Object o) {
-        if (!(o instanceof Node))
+    public boolean equals (Object other) {
+        if (!(other instanceof Node))
             return false;
-        return this.pID == ((Node)o).pID;
+        else {
+            Node o = (Node)other;
+            return this.pID.equals(o.pID) && this.created == o.created;
+        }
     }
     
     @Override
     public int hashCode () {
-        return pID.hashCode();
+        return pID.hashCode() + Long.valueOf(created).hashCode();
     }
     
     private void print (String s) {
