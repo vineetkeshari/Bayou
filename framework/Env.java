@@ -7,7 +7,7 @@ import java.util.*;
 
 public class Env {
     public static final long DELAY = 0;
-    private static final ProcessId pID = new ProcessId("ENV", false);
+    static final ProcessId envPID = new ProcessId("ENV", false);
     
     public static void main (String[] args) {
         Env env = new Env();
@@ -18,14 +18,19 @@ public class Env {
     Map<ProcessId, AntiEntropy> AEs = new HashMap<ProcessId, AntiEntropy>();
     BufferedReader  reader;
     ProcessId connected;
+    final ProcessId primary;
     boolean paused = false;
     
     public Env () {
         reader = new BufferedReader (new InputStreamReader (System.in));
+        
+        primary = new ProcessId("PRIMARY", false);
+        addNode (primary);
+        connected = primary;
     }
     
     public synchronized void sendMessage (ProcessId dst, BayouMessage m) {
-        if (m.src.equals(new ProcessId("ENV",false)) || AEs.containsKey(m.src) && !AEs.get(m.src).parent.ignoring || nodes.containsKey(m.src) && !nodes.get(m.src).ignoring) {
+        if (m.src.equals(envPID) || AEs.containsKey(m.src) && !AEs.get(m.src).parent.ignoring || nodes.containsKey(m.src) && !nodes.get(m.src).ignoring) {
             if (AEs.containsKey(dst) && AEs.get(dst).alive) {
                 AEs.get(dst).deliver(m);
             } else if (nodes.containsKey(dst) && nodes.get(dst).alive) {
@@ -47,7 +52,7 @@ public class Env {
     
     public synchronized void retire (ProcessId pID) {
         if (nodes.containsKey(pID)) {
-            sendMessage (pID, new RetireMessage(this.pID));
+            sendMessage (pID, new RetireMessage(envPID));
             nodes.remove(pID);
             print("Removed node:\t" + pID);
         } else
@@ -104,6 +109,17 @@ public class Env {
     public synchronized void printLog(ProcessId pID) {
         if (nodes.containsKey(pID))
             nodes.get(pID).printLog();
+    }
+    
+    public synchronized void printAllDBs () {
+        for (ProcessId pID : nodes.keySet()) {
+            nodes.get(pID).printDB();
+        }
+    }
+    
+    public synchronized void printDB(ProcessId pID) {
+        if (nodes.containsKey(pID))
+            nodes.get(pID).printDB();
     }
     
     public synchronized void connect (ProcessId pID) {

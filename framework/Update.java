@@ -4,10 +4,13 @@ import playlist.operations.Operation;
 
 public class Update implements Comparable<Update> {
     final long created = System.currentTimeMillis();
-    Operation operation;
+    final Operation operation;
+    final ProcessId server;
+    long CSN = 999999999999999999L;
     
-    public Update (Operation operation) {
+    public Update (Operation operation, ProcessId server) {
         this.operation = operation;
+        this.server = server;
     }
     
     public String toString () {
@@ -19,7 +22,7 @@ public class Update implements Comparable<Update> {
             return false;
         else {
             Update o = (Update)other;
-            return this.created == o.created && this.operation.equals(o.operation);
+            return this.created == o.created && this.operation.equals(o.operation) && this.CSN == o.CSN;
         }
     }
     

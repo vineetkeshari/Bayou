@@ -5,7 +5,7 @@ import java.util.Map;
 import playlist.operations.Operation;
 
 public class BayouMessage {
-    ProcessId src;
+    final ProcessId src;
     
     public BayouMessage(ProcessId src) {
         this.src = src;
@@ -22,7 +22,7 @@ class RetireMessage extends BayouMessage {
 }
 
 class ActionMessage extends BayouMessage {
-    Update update;
+    final Update update;
     public ActionMessage (ProcessId src, Update update) {
         super(src);
         this.update = update;
@@ -33,8 +33,8 @@ class ActionMessage extends BayouMessage {
 }
 
 class ActionUpdateMessage extends BayouMessage {
-    ProcessId srcNode;
-    Update update;
+    final ProcessId srcNode;
+    final Update update;
     public ActionUpdateMessage (ProcessId src, ProcessId srcNode, Update update) {
         super(src);
         this.srcNode = srcNode;
@@ -55,10 +55,12 @@ class GetStateMessage extends BayouMessage {
 }
 
 class StateMessage extends BayouMessage {
-    VectorClock vectorClock;
-    public StateMessage (ProcessId src, VectorClock vectorClock) {
+    final VectorClock vectorClock;
+    final long CSN;
+    public StateMessage (ProcessId src, VectorClock vectorClock, long CSN) {
         super(src);
         this.vectorClock = vectorClock;
+        this.CSN = CSN;
     }
     public String toString() {
         return "\t[MESSAGE]\tSTATE\t" + String.valueOf(src) + "\t" + vectorClock; 

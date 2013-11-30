@@ -20,6 +20,8 @@ public class Node extends Thread {
     Playlist db = new Playlist();
     VectorClock vectorClock = new VectorClock();
     Set<Update> log = new TreeSet<Update>();
+    Set<Update> commitedLog = new TreeSet<Update>();
+    long CSN = 0;
     
     boolean ignoring = false;
     boolean paused = false;
@@ -56,19 +58,19 @@ public class Node extends Thread {
         if (msg.src.isAE)
             return (!ignoring && !microIgnore.contains(env.AEs.get(msg.src).parent.pID));
         else
-            return (!ignoring && !microIgnore.contains(msg.src)) || msg.src.equals(new ProcessId("ENV", false));
+            return (!ignoring && !microIgnore.contains(msg.src)) || msg.src.equals(env.envPID);
     }
     
     private void handle (BayouMessage msg) {
         if (msg instanceof RetireMessage) {
             RetireMessage m = (RetireMessage)msg;
             print(m.toString());
-            if (m.src.equals("ENV"))
+            if (m.src.equals(env.envPID))
                 retire();
         } else if (msg instanceof GetStateMessage) {
             GetStateMessage m = (GetStateMessage)msg;
             print(m.toString());
-            env.sendMessage(m.src, new StateMessage(pID, vectorClock));
+            sendMessage(m.src, new StateMessage(pID, vectorClock, CSN));
         } else if (msg instanceof ActionMessage) {
             ActionMessage m = (ActionMessage)msg;
             print(m.toString());
@@ -103,6 +105,11 @@ public class Node extends Thread {
         for (Update u : log) {
             System.out.println("\t\t\t" + u.created + "\t" + u.operation);
         }
+    }
+    
+    public void printDB () {
+        print ("DB:");
+        System.out.println(db);
     }
     
     private BayouMessage getNextMessage() {

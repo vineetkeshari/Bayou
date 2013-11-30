@@ -4,7 +4,7 @@ import playlist.Playlist;
 
 public abstract class Operation {
     private final long created = System.currentTimeMillis();
-    String text;
+    final String text;
     
     public Operation (String text) {
         this.text = text;

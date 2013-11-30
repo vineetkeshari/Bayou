@@ -3,7 +3,7 @@ package framework;
 import playlist.operations.*;
 
 public class InputParser {
-    private static final ProcessId pID = new ProcessId("ENV", false);
+    private static final ProcessId envPID = new ProcessId("ENV", false);
     public static boolean parseInput (String input, Env env) {
         if (input == null)
             return false;
@@ -15,6 +15,8 @@ public class InputParser {
                 return false;
             } else if (parts[0].equals("PRINTLOG")) {
                 env.printAllLogs();
+            } else if (parts[0].equals("PRINTDB")) {
+                env.printAllDBs();
             } else if (parts[0].equals("PAUSE")) {
                 env.pause();
             } else if (parts[0].equals("CONTINUE")) {
@@ -31,11 +33,13 @@ public class InputParser {
                 env.reconnect(generatePID(parts[1]));
             } else if (parts[0].equals("PRINTLOG")) {
                 env.printLog(generatePID(parts[1]));
+            } else if (parts[0].equals("PRINTDB")) {
+                env.printDB(generatePID(parts[1]));
             } else if (parts[0].equals("CONNECT")) {
                 env.connect(generatePID(parts[1]));
             } else if (parts[0].equals("REMOVE")) {
                 if (env.nodes.containsKey(env.connected)) {
-                    env.sendMessage(env.connected, new ActionMessage (pID, new Update (new RemoveOperation (input, parts[1]))));
+                    env.sendMessage(env.connected, new ActionMessage (envPID, new Update (new RemoveOperation (input, parts[1]), env.connected)));
                 } else {
                     print("No connected process!");
                 }
@@ -47,7 +51,7 @@ public class InputParser {
                 env.recoverConnection (generatePID(parts[1]), generatePID(parts[2]));
             } else if (parts[0].equals("ADD")) {
                 if (env.nodes.containsKey(env.connected)) {
-                    env.sendMessage(env.connected, new ActionMessage (pID, new Update (new AddOperation (input, parts[1], parts[2]))));
+                    env.sendMessage(env.connected, new ActionMessage (envPID, new Update (new AddOperation (input, parts[1], parts[2]), env.connected)));
                 } else {
                     print("No connected process!");
                 }
@@ -55,7 +59,7 @@ public class InputParser {
         } else if (parts.length == 4) {
             if (parts[0].equals("EDIT")) {
                 if (env.nodes.containsKey(env.connected)) {
-                    env.sendMessage(env.connected, new ActionMessage (pID, new Update (new EditOperation (input, parts[1], parts[2], parts[3]))));
+                    env.sendMessage(env.connected, new ActionMessage (envPID, new Update (new EditOperation (input, parts[1], parts[2], parts[3]), env.connected)));
                 } else {
                     print("No connected process!");
                 }

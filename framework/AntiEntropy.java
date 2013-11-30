@@ -26,7 +26,7 @@ public class AntiEntropy extends Thread {
     @Override
     public void run() {
         env.AEs.put(pID, this);
-        env.sendMessage(dest, new GetStateMessage(pID));
+        sendMessage(dest, new GetStateMessage(pID));
         body();
         retire();
     }
@@ -48,7 +48,7 @@ public class AntiEntropy extends Thread {
                 VectorClock destState = m.vectorClock;
                 for (Update u : parent.log) {
                     if (!destState.containsKey(parent.pID) || destState.get(parent.pID) < u.created) {
-                        env.sendMessage(dest, new ActionUpdateMessage(pID, parent.pID, u));
+                        sendMessage(dest, new ActionUpdateMessage(pID, parent.pID, u));
                     }
                 }
             }
