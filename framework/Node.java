@@ -97,15 +97,17 @@ public class Node extends Thread {
     protected void handleActionUpdate (ActionUpdateMessage m) {
         print(m.toString());
         write (m.srcNode, m.update);
+        commitPending();
     }
     
     protected void handleCommit (CommitMessage m) {
         print(m.toString());
-        
-        if (log.contains(m.update))
-            log.remove(m.update);
+        log.remove(m.update);
         log.add(m.update);
-        
+        commitPending();
+    }
+    
+    protected void commitPending () {
         boolean canCommit = false;
         for (Update u : log) {
             if (!canCommit && u.CSN > CSN)
@@ -117,6 +119,7 @@ public class Node extends Thread {
                 } else
                     break;
         }
+        
     }
     
     protected void write (ProcessId updateSrc, Update update) {

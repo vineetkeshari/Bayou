@@ -15,7 +15,7 @@ public class Update implements Comparable<Update> {
     }
     
     public String toString () {
-        return String.valueOf(created) + " " + server + " " + operation + ((CSN==INFINITY)? "":"\t[COMMITTED]");
+        return String.valueOf(created) + " " + server + " " + operation + ((CSN==INFINITY)? "":"\t[COMMITTED]" + " " + CSN);
     }
     
     public boolean equals (Object other) {

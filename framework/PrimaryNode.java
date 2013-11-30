@@ -64,8 +64,8 @@ public class PrimaryNode extends Node {
     protected void updateCommits () {
         for (Update u : log) {
             if (u.CSN==Update.INFINITY) {
-                u.CSN = ++CSN;
                 commit (u);
+                u.CSN = ++CSN;
             }
         }
     }
