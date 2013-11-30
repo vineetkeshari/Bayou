@@ -25,10 +25,12 @@ public class Env {
     }
     
     public synchronized void sendMessage (ProcessId dst, BayouMessage m) {
-        if (AEs.containsKey(dst) && AEs.get(dst).alive) {
-            AEs.get(dst).deliver(m);
-        } else if (nodes.containsKey(dst) && nodes.get(dst).alive) {
-            nodes.get(dst).deliver(m);
+        if (m.src.equals(new ProcessId("ENV",false)) || AEs.containsKey(m.src) && !AEs.get(m.src).parent.ignoring || nodes.containsKey(m.src) && !nodes.get(m.src).ignoring) {
+            if (AEs.containsKey(dst) && AEs.get(dst).alive) {
+                AEs.get(dst).deliver(m);
+            } else if (nodes.containsKey(dst) && nodes.get(dst).alive) {
+                nodes.get(dst).deliver(m);
+            }
         }
     }
     
@@ -114,6 +116,7 @@ public class Env {
     }
     
     private String getNextInput() {
+        System.out.print("BAYOU$ ");
         String line;
         try {
             line = reader.readLine();

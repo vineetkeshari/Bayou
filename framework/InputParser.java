@@ -22,17 +22,17 @@ public class InputParser {
             }
         } else if (parts.length == 2) {
             if (parts[0].equals("JOIN")) {
-                env.addNode(generatePID(Integer.parseInt(parts[1])));
+                env.addNode(generatePID(parts[1]));
             } else if (parts[0].equals("LEAVE")) {
-                env.retire(generatePID(Integer.parseInt(parts[1])));
+                env.retire(generatePID(parts[1]));
             } else if (parts[0].equals("ISOLATE")) {
-                env.isolate(generatePID(Integer.parseInt(parts[1])));
+                env.isolate(generatePID(parts[1]));
             } else if (parts[0].equals("RECONNECT")) {
-                env.reconnect(generatePID(Integer.parseInt(parts[1])));
+                env.reconnect(generatePID(parts[1]));
             } else if (parts[0].equals("PRINTLOG")) {
-                env.printLog(generatePID(Integer.parseInt(parts[1])));
+                env.printLog(generatePID(parts[1]));
             } else if (parts[0].equals("CONNECT")) {
-                env.connect(generatePID(Integer.parseInt(parts[1])));
+                env.connect(generatePID(parts[1]));
             } else if (parts[0].equals("REMOVE")) {
                 if (env.nodes.containsKey(env.connected)) {
                     env.sendMessage(env.connected, new ActionMessage (pID, new Update (new RemoveOperation (input, parts[1]))));
@@ -42,9 +42,9 @@ public class InputParser {
             }
         } else if (parts.length == 3) {
             if (parts[0].equals("BREAK")) {
-                env.breakConnection (generatePID(Integer.parseInt(parts[1])), generatePID(Integer.parseInt(parts[2])));
+                env.breakConnection (generatePID(parts[1]), generatePID(parts[2]));
             } else if (parts[0].equals("RECOVER")) {
-                env.recoverConnection (generatePID(Integer.parseInt(parts[1])), generatePID(Integer.parseInt(parts[2])));
+                env.recoverConnection (generatePID(parts[1]), generatePID(parts[2]));
             } else if (parts[0].equals("ADD")) {
                 if (env.nodes.containsKey(env.connected)) {
                     env.sendMessage(env.connected, new ActionMessage (pID, new Update (new AddOperation (input, parts[1], parts[2]))));
@@ -65,7 +65,7 @@ public class InputParser {
         return true;
     }
     
-    private static ProcessId generatePID (int pID) {
+    private static ProcessId generatePID (String pID) {
         return new ProcessId ("Process:" + pID, false);
     }
     

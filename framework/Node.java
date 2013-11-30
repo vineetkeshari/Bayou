@@ -54,7 +54,7 @@ public class Node extends Thread {
     
     private boolean canAccept (BayouMessage msg) {
         if (msg.src.isAE)
-            return (!ignoring && !microIgnore.contains(env.AEs.get(msg.src).parent));
+            return (!ignoring && !microIgnore.contains(env.AEs.get(msg.src).parent.pID));
         else
             return (!ignoring && !microIgnore.contains(msg.src)) || msg.src.equals(new ProcessId("ENV", false));
     }
