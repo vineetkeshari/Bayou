@@ -1,10 +1,6 @@
 package framework;
 
-import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
 
@@ -20,7 +16,7 @@ public class Node extends Thread {
     Playlist db = new Playlist();
     VectorClock vectorClock = new VectorClock();
     Set<Update> log = new TreeSet<Update>();
-    long CSN = 0, committedSN = 0;
+    long CSN = 0, OSN = 0;
     
     boolean ignoring = false;
     boolean paused = false;
@@ -69,6 +65,8 @@ public class Node extends Thread {
             handleAction((ActionMessage)msg);
         } else if (msg instanceof ActionUpdateMessage) {
             handleActionUpdate((ActionUpdateMessage)msg);
+        } else if (msg instanceof DBUpdateMessage) {
+            handleDBUpdate((DBUpdateMessage)msg);
         } else if (msg instanceof CommitMessage) {
             handleCommit((CommitMessage)msg);
         }
@@ -98,6 +96,13 @@ public class Node extends Thread {
         print(m.toString());
         write (m.srcNode, m.update);
         commitPending();
+    }
+    
+    protected void handleDBUpdate (DBUpdateMessage m) {
+        print(m.toString());
+        
+        //write (m.srcNode, m.update);
+        //commitPending();
     }
     
     protected void handleCommit (CommitMessage m) {
@@ -141,7 +146,14 @@ public class Node extends Thread {
     }
     
     private void retire () {
+        propagate();
+        try {
+            Thread.sleep(env.DELAY*10);
+        } catch (InterruptedException e) {
+            print ("InterruptedException in sleep!");
+        }
         alive = false;
+        env.nodes.remove(pID);
     }
     
     public void printLog () {

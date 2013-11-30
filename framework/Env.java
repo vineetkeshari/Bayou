@@ -56,7 +56,6 @@ public class Env {
     public synchronized void retire (ProcessId pID) {
         if (nodes.containsKey(pID)) {
             sendMessage (pID, new RetireMessage(envPID));
-            nodes.remove(pID);
             print("Removed node:\t" + pID);
         } else
             print (pID + " does not exist!");

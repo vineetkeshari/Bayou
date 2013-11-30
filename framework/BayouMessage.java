@@ -1,8 +1,6 @@
 package framework;
 
-import java.util.Map;
-
-import playlist.operations.Operation;
+import playlist.Playlist;
 
 public class BayouMessage {
     final ProcessId src;
@@ -42,6 +40,19 @@ class ActionUpdateMessage extends BayouMessage {
     }
     public String toString() {
         return "\t[MESSAGE]\tACTIONUPDATE\t" + String.valueOf(src) + "\t" + srcNode + "\t" + update; 
+    }
+}
+
+class DBUpdateMessage extends BayouMessage {
+    final ProcessId srcNode;
+    final Playlist db;
+    public DBUpdateMessage (ProcessId src, ProcessId srcNode, Playlist db) {
+        super(src);
+        this.srcNode = srcNode;
+        this.db = db;
+    }
+    public String toString() {
+        return "\t[MESSAGE]\tDBUPDATE\t" + String.valueOf(src) + "\t" + srcNode + "\t" + db; 
     }
 }
 

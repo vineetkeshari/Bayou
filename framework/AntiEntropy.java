@@ -1,12 +1,5 @@
 package framework;
 
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
-
-import playlist.Playlist;
-
 public class AntiEntropy extends Thread {
     private final long created = System.currentTimeMillis();
     ProcessId pID, dest;
@@ -47,6 +40,10 @@ public class AntiEntropy extends Thread {
             if (msg.src.equals(dest)) {
                 long destCSN = m.CSN;
                 VectorClock destVC = m.vectorClock;
+                
+                if (parent.OSN > destCSN) {
+                    // handle truncating logs
+                }
                 
                 if (destCSN < parent.CSN) {
                     boolean canSend = false;
