@@ -1,6 +1,5 @@
 #!/bin/sh
 
 find . -name "*.class" | xargs rm
-find . -name "*.log" | xargs rm
 find . -name "*.java" | xargs javac
 java framework/Env

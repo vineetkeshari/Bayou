@@ -3,10 +3,11 @@ package framework;
 import playlist.operations.Operation;
 
 public class Update implements Comparable<Update> {
+    static final long INFINITY = 999999999999999999L;
     final long created = System.currentTimeMillis();
     final Operation operation;
     final ProcessId server;
-    long CSN = 999999999999999999L;
+    long CSN = INFINITY;
     
     public Update (Operation operation, ProcessId server) {
         this.operation = operation;
@@ -14,7 +15,7 @@ public class Update implements Comparable<Update> {
     }
     
     public String toString () {
-        return String.valueOf(created) + " " + operation;
+        return String.valueOf(created) + " " + server + " " + operation + ((CSN==INFINITY)? "":"\t[COMMITTED]");
     }
     
     public boolean equals (Object other) {
@@ -22,11 +23,21 @@ public class Update implements Comparable<Update> {
             return false;
         else {
             Update o = (Update)other;
-            return this.created == o.created && this.operation.equals(o.operation) && this.CSN == o.CSN;
+            return this.created == o.created && this.operation.equals(o.operation) && this.server.equals(o.server);
         }
     }
     
+    public int hashCode () {
+        return Long.valueOf(created).hashCode() + operation.hashCode() + server.hashCode();
+    }
+    
     public int compareTo (Update other) {
+        if (CSN < other.CSN)
+            return -1;
+        if (CSN > other.CSN)
+            return 1;
+        if (!server.equals(other.server))
+            return 0;
         return (int)(created - other.created);
     }
 

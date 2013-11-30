@@ -46,7 +46,7 @@ public class Playlist {
     public String toString () {
         StringBuffer sb = new StringBuffer();
         for (String song : songs.keySet())
-            sb.append("\n\t\t\t\t" + song + "\t" + songs.get(song));
+            sb.append("\t\t\t\t" + song + "\t" + songs.get(song) + "\n");
         return new String(sb);
     }
 }

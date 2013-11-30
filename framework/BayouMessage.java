@@ -67,3 +67,14 @@ class StateMessage extends BayouMessage {
     }
 }
 
+class CommitMessage extends BayouMessage {
+    final Update update;
+    public CommitMessage (ProcessId src, Update update) {
+        super(src);
+        this.update = update;
+    }
+    public String toString() {
+        return "\t[MESSAGE]\tCOMMIT\t" + String.valueOf(src) + "\t" + update; 
+    }
+}
+

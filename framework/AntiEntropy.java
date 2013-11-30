@@ -45,9 +45,25 @@ public class AntiEntropy extends Thread {
             StateMessage m = (StateMessage)msg;
             print(m.toString());
             if (msg.src.equals(dest)) {
-                VectorClock destState = m.vectorClock;
+                long destCSN = m.CSN;
+                VectorClock destVC = m.vectorClock;
+                
+                if (destCSN < parent.CSN) {
+                    boolean canSend = false;
+                    for (Update u : parent.log) {
+                        if (!canSend && u.CSN > destCSN)
+                            canSend = true;
+                        if (canSend) {
+                            if (destVC.containsKey(parent.pID) && u.created <= destVC.get(parent.pID))
+                                sendMessage (dest, new CommitMessage(pID, u));
+                            else
+                                sendMessage(dest, new ActionUpdateMessage(pID, parent.pID, u));
+                        }
+                    }
+                }
+                
                 for (Update u : parent.log) {
-                    if (!destState.containsKey(parent.pID) || destState.get(parent.pID) < u.created) {
+                    if (!destVC.containsKey(parent.pID) || destVC.get(parent.pID) < u.created) {
                         sendMessage(dest, new ActionUpdateMessage(pID, parent.pID, u));
                     }
                 }

@@ -20,8 +20,7 @@ public class Node extends Thread {
     Playlist db = new Playlist();
     VectorClock vectorClock = new VectorClock();
     Set<Update> log = new TreeSet<Update>();
-    Set<Update> commitedLog = new TreeSet<Update>();
-    long CSN = 0;
+    long CSN = 0, committedSN = 0;
     
     boolean ignoring = false;
     boolean paused = false;
@@ -38,7 +37,7 @@ public class Node extends Thread {
         env.retire(pID);
     }
     
-    private void body() {
+    protected void body() {
         while (alive) {
             while (paused) {
                 try {
@@ -54,46 +53,88 @@ public class Node extends Thread {
         }
     }
     
-    private boolean canAccept (BayouMessage msg) {
+    protected boolean canAccept (BayouMessage msg) {
         if (msg.src.isAE)
             return (!ignoring && !microIgnore.contains(env.AEs.get(msg.src).parent.pID));
         else
             return (!ignoring && !microIgnore.contains(msg.src)) || msg.src.equals(env.envPID);
     }
     
-    private void handle (BayouMessage msg) {
+    protected void handle (BayouMessage msg) {
         if (msg instanceof RetireMessage) {
-            RetireMessage m = (RetireMessage)msg;
-            print(m.toString());
-            if (m.src.equals(env.envPID))
-                retire();
+            handleRetire((RetireMessage)msg);
         } else if (msg instanceof GetStateMessage) {
-            GetStateMessage m = (GetStateMessage)msg;
-            print(m.toString());
-            sendMessage(m.src, new StateMessage(pID, vectorClock, CSN));
+            handleGetState((GetStateMessage)msg);
         } else if (msg instanceof ActionMessage) {
-            ActionMessage m = (ActionMessage)msg;
-            print(m.toString());
-            write (m.src, m.update);
-            for (ProcessId p : env.nodes.keySet()) {
-                if (!p.equals(pID)) {
-                    new AntiEntropy (this, p, env).start();
-                }
-            }
+            handleAction((ActionMessage)msg);
         } else if (msg instanceof ActionUpdateMessage) {
-            ActionUpdateMessage m = (ActionUpdateMessage)msg;
-            print(m.toString());
-            write (m.srcNode, m.update);
+            handleActionUpdate((ActionUpdateMessage)msg);
+        } else if (msg instanceof CommitMessage) {
+            handleCommit((CommitMessage)msg);
         }
         
         
         
     }
     
-    private void write (ProcessId updateSrc, Update update) {
-        if (log.add(update))
-            update.operation.perform(db);
-        vectorClock.put(updateSrc, update.created);
+    protected void handleRetire (RetireMessage m) {
+        print(m.toString());
+        if (m.src.equals(env.envPID))
+            retire();
+    }
+    
+    protected void handleGetState (GetStateMessage m) {
+        print(m.toString());
+        sendMessage(m.src, new StateMessage(pID, vectorClock, CSN));
+    }
+    
+    protected void handleAction (ActionMessage m) {
+        print(m.toString());
+        write (m.src, m.update);
+        propogate ();
+    }
+    
+    protected void handleActionUpdate (ActionUpdateMessage m) {
+        print(m.toString());
+        write (m.srcNode, m.update);
+    }
+    
+    protected void handleCommit (CommitMessage m) {
+        print(m.toString());
+        
+        if (log.contains(m.update))
+            log.remove(m.update);
+        log.add(m.update);
+        
+        boolean canCommit = false;
+        for (Update u : log) {
+            if (!canCommit && u.CSN > CSN)
+                canCommit = true;
+            if (canCommit)
+                if (u.CSN == CSN+1) {
+                    commit(u);
+                    CSN = u.CSN;
+                } else
+                    break;
+        }
+    }
+    
+    protected void write (ProcessId updateSrc, Update update) {
+        log.add(update);
+        if (!vectorClock.containsKey(updateSrc) || update.created > vectorClock.get(updateSrc))
+            vectorClock.put(updateSrc, update.created);
+    }
+    
+    protected void propogate () {
+        for (ProcessId p : env.nodes.keySet()) {
+            if (!p.equals(pID)) {
+                new AntiEntropy (this, p, env).start();
+            }
+        }
+    }
+    
+    protected void commit (Update update) {
+        update.operation.perform(db);
     }
     
     private void retire () {
@@ -103,20 +144,20 @@ public class Node extends Thread {
     public void printLog () {
         print ("LOG:");
         for (Update u : log) {
-            System.out.println("\t\t\t" + u.created + "\t" + u.operation);
+            System.out.println("\t\t\t\t" + u);
         }
     }
     
     public void printDB () {
         print ("DB:");
-        System.out.println(db);
+        System.out.print(db);
     }
     
-    private BayouMessage getNextMessage() {
+    protected BayouMessage getNextMessage() {
         return inbox.bdequeue();
     }
     
-    private void sendMessage(ProcessId dst, BayouMessage msg) {
+    protected void sendMessage(ProcessId dst, BayouMessage msg) {
         env.sendMessage(dst, msg);
         delay();
     }
@@ -125,7 +166,7 @@ public class Node extends Thread {
         inbox.enqueue(msg);
     }
     
-    private void delay() {
+    protected void delay() {
         try {
             Thread.sleep(env.DELAY);
         } catch (InterruptedException e) {
@@ -152,7 +193,7 @@ public class Node extends Thread {
         return pID.hashCode() + Long.valueOf(created).hashCode();
     }
     
-    private void print (String s) {
+    protected void print (String s) {
         System.out.println("[" + pID + "]\t" + System.currentTimeMillis() + "\t" + s);
     }
     

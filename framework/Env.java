@@ -24,9 +24,12 @@ public class Env {
     public Env () {
         reader = new BufferedReader (new InputStreamReader (System.in));
         
-        primary = new ProcessId("PRIMARY", false);
-        addNode (primary);
+        primary = new ProcessId("Process:0", false);
+        PrimaryNode primaryNode = new PrimaryNode(primary, this);
+        nodes.put(primary, primaryNode);
         connected = primary;
+        print("Added primary node:\t" + primary);
+        primaryNode.start();
     }
     
     public synchronized void sendMessage (ProcessId dst, BayouMessage m) {
@@ -62,11 +65,13 @@ public class Env {
     public synchronized void isolate (ProcessId pID) {
         if (nodes.containsKey(pID))
             nodes.get(pID).ignoring = true;
+        print("Isolated node:\t" + pID);
     }
     
     public synchronized void reconnect (ProcessId pID) {
         if (nodes.containsKey(pID))
             nodes.get(pID).ignoring = false;
+        print("Reconnected node:\t" + pID);
     }
     
     public synchronized void pause () {
@@ -90,14 +95,18 @@ public class Env {
         if (nodes.containsKey(p1) && nodes.containsKey(p2)) {
             nodes.get(p1).microIgnore.add(p2);
             nodes.get(p2).microIgnore.add(p1);
-        }
+            print("Broke connection:\t" + p1 + "\t" + p2);
+        } else
+            print("One of these processIDs doesn't exist!");
     }
     
     public synchronized void recoverConnection (ProcessId p1, ProcessId p2) {
         if (nodes.containsKey(p1) && nodes.containsKey(p2)) {
             nodes.get(p1).microIgnore.remove(p2);
             nodes.get(p2).microIgnore.remove(p1);
-        }
+            print("Recovered connection:\t" + p1 + "\t" + p2);
+        } else
+            print("One of these processIDs doesn't exist!");
     }
     
     public synchronized void printAllLogs () {
