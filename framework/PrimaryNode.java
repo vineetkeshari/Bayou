@@ -50,7 +50,7 @@ public class PrimaryNode extends Node {
         print(m.toString());
         write (m.src, m.update);
         updateCommits();
-        propogate();
+        propagate();
     }
 
     @Override
@@ -58,7 +58,7 @@ public class PrimaryNode extends Node {
         print(m.toString());
         write (m.srcNode, m.update);
         updateCommits();
-        propogate();
+        propagate();
     }
     
     protected void updateCommits () {

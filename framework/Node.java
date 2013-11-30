@@ -91,7 +91,7 @@ public class Node extends Thread {
     protected void handleAction (ActionMessage m) {
         print(m.toString());
         write (m.src, m.update);
-        propogate ();
+        propagate ();
     }
     
     protected void handleActionUpdate (ActionUpdateMessage m) {
@@ -125,7 +125,7 @@ public class Node extends Thread {
             vectorClock.put(updateSrc, update.created);
     }
     
-    protected void propogate () {
+    protected void propagate () {
         for (ProcessId p : env.nodes.keySet()) {
             if (!p.equals(pID)) {
                 new AntiEntropy (this, p, env).start();
