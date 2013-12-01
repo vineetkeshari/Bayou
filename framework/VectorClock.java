@@ -34,4 +34,12 @@ public class VectorClock {
         }
         return new String(sb);
     }
+    
+    public VectorClock clone() {
+        VectorClock newVC = new VectorClock();
+        for (ProcessId p : clock.keySet()) {
+            newVC.put(p, clock.get(p));
+        }
+        return newVC;
+    }
 }

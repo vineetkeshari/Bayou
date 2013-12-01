@@ -30,41 +30,6 @@ class ActionMessage extends BayouMessage {
     }
 }
 
-class ActionUpdateMessage extends BayouMessage {
-    final ProcessId srcNode;
-    final Update update;
-    public ActionUpdateMessage (ProcessId src, ProcessId srcNode, Update update) {
-        super(src);
-        this.srcNode = srcNode;
-        this.update = update;
-    }
-    public String toString() {
-        return "\t[MESSAGE]\tACTIONUPDATE\t" + String.valueOf(src) + "\t" + srcNode + "\t" + update; 
-    }
-}
-
-class DBUpdateMessage extends BayouMessage {
-    final ProcessId srcNode;
-    final Playlist db;
-    public DBUpdateMessage (ProcessId src, ProcessId srcNode, Playlist db) {
-        super(src);
-        this.srcNode = srcNode;
-        this.db = db;
-    }
-    public String toString() {
-        return "\t[MESSAGE]\tDBUPDATE\t" + String.valueOf(src) + "\t" + srcNode + "\t" + db; 
-    }
-}
-
-class GetStateMessage extends BayouMessage {
-    public GetStateMessage (ProcessId src) {
-        super(src);
-    }
-    public String toString() {
-        return "\t[MESSAGE]\tGETSTATE\t" + String.valueOf(src); 
-    }
-}
-
 class StateMessage extends BayouMessage {
     final VectorClock vectorClock;
     final long CSN;
@@ -78,10 +43,54 @@ class StateMessage extends BayouMessage {
     }
 }
 
-class CommitMessage extends BayouMessage {
-    final Update update;
-    public CommitMessage (ProcessId src, Update update) {
+class AntiEntropyMessage extends BayouMessage {
+    final ProcessId srcNode;
+    
+    public AntiEntropyMessage (ProcessId src, ProcessId srcNode) {
         super(src);
+        this.srcNode = srcNode;
+    }
+}
+
+class ActionUpdateMessage extends AntiEntropyMessage {
+    final Update update;
+    public ActionUpdateMessage (ProcessId src, ProcessId srcNode, Update update) {
+        super(src, srcNode);
+        this.update = update;
+    }
+    public String toString() {
+        return "\t[MESSAGE]\tACTIONUPDATE\t" + String.valueOf(src) + "\t" + update; 
+    }
+}
+
+class DBUpdateMessage extends AntiEntropyMessage {
+    final Playlist db;
+    final VectorClock omitVC;
+    final long OSN;
+    public DBUpdateMessage (ProcessId src, ProcessId srcNode, Playlist db, VectorClock omitVC, long OSN) {
+        super(src, srcNode);
+        this.db = db;
+        this.omitVC = omitVC;
+        this.OSN = OSN;
+    }
+    public String toString() {
+        return "\t[MESSAGE]\tDBUPDATE\t" + String.valueOf(src) + "\t" + OSN + omitVC + db; 
+    }
+}
+
+class GetStateMessage extends AntiEntropyMessage {
+    public GetStateMessage (ProcessId src, ProcessId srcNode) {
+        super(src, srcNode);
+    }
+    public String toString() {
+        return "\t[MESSAGE]\tGETSTATE\t" + String.valueOf(src); 
+    }
+}
+
+class CommitMessage extends AntiEntropyMessage {
+    final Update update;
+    public CommitMessage (ProcessId src, ProcessId srcNode, Update update) {
+        super(src, srcNode);
         this.update = update;
     }
     public String toString() {

@@ -1,6 +1,7 @@
 package framework;
 
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.Set;
 import java.util.TreeSet;
 
@@ -12,10 +13,10 @@ public class Node extends Thread {
     Env env;
     Queue<BayouMessage> inbox = new Queue<BayouMessage>();
     Set<ProcessId> microIgnore = new HashSet<ProcessId>();
-    
-    Playlist db = new Playlist();
-    VectorClock vectorClock = new VectorClock();
+
     Set<Update> log = new TreeSet<Update>();
+    Playlist db = new Playlist(), omitDB = new Playlist();
+    VectorClock vectorClock = new VectorClock(), omitVC = new VectorClock();
     long CSN = 0, OSN = 0;
     
     boolean ignoring = false;
@@ -57,6 +58,8 @@ public class Node extends Thread {
     }
     
     protected void handle (BayouMessage msg) {
+        if (env.DEBUG)
+            print("CSN: " + CSN + "\t" + "OSN: " + OSN + "\nDB:" + db + "\nomitDB:" + omitDB + "\nVC:" + vectorClock + "\nomitVC:" + omitVC + "\nLog:" + log);
         if (msg instanceof RetireMessage) {
             handleRetire((RetireMessage)msg);
         } else if (msg instanceof GetStateMessage) {
@@ -88,21 +91,50 @@ public class Node extends Thread {
     
     protected void handleAction (ActionMessage m) {
         print(m.toString());
-        write (m.src, m.update);
+        write (m.update);
         propagate ();
     }
     
     protected void handleActionUpdate (ActionUpdateMessage m) {
         print(m.toString());
-        write (m.srcNode, m.update);
+        write (m.update);
         commitPending();
     }
     
     protected void handleDBUpdate (DBUpdateMessage m) {
         print(m.toString());
-        
-        //write (m.srcNode, m.update);
-        //commitPending();
+        db = m.db; omitDB = m.db;
+        CSN = m.OSN; OSN = m.OSN;
+        vectorClock = m.omitVC; omitVC = m.omitVC;
+        Set<Update> newLog = new TreeSet<Update>();
+        for (Update u : log) {
+            if (!vectorClock.containsKey(u.server) || u.created >= vectorClock.get(u.server))
+                newLog.add(u);
+        }
+        log = newLog;
+        commitPending();
+    }
+    
+    protected void discardLog () {
+        Iterator<Update> it = log.iterator();
+        Set<Update> newLog = new TreeSet<Update>();
+        boolean discarding = true;
+        for (int i=0; it.hasNext(); ++i) {
+            Update u = it.next();
+            if (u.CSN == Update.INFINITY || i+env.LOGSIZE >= log.size()) {
+                discarding = false;
+            }
+            if (discarding) {
+                u.operation.perform(omitDB);
+                if (u.CSN > OSN)
+                    OSN = CSN;
+                if (!omitVC.containsKey(u.server) || u.created > omitVC.get(u.server))
+                    omitVC.put(u.server, u.created);
+            } else {
+                newLog.add(u);
+            }
+        }
+        log = newLog;
     }
     
     protected void handleCommit (CommitMessage m) {
@@ -124,13 +156,13 @@ public class Node extends Thread {
                 } else
                     break;
         }
-        
+        discardLog();
     }
     
-    protected void write (ProcessId updateSrc, Update update) {
+    protected void write (Update update) {
         log.add(update);
-        if (!vectorClock.containsKey(updateSrc) || update.created > vectorClock.get(updateSrc))
-            vectorClock.put(updateSrc, update.created);
+        if (!vectorClock.containsKey(update.server) || update.created > vectorClock.get(update.server))
+            vectorClock.put(update.server, update.created);
     }
     
     protected void propagate () {

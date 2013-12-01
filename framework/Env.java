@@ -6,30 +6,35 @@ import java.io.InputStreamReader;
 import java.util.*;
 
 public class Env {
+    final static boolean DEBUG = false;
     public static final long DELAY = 0;
+    public static final int LOGSIZE = 1;
+    
     static final ProcessId envPID = new ProcessId("ENV", false);
     
     public static void main (String[] args) {
         Env env = new Env();
         env.run(args);
     }
+
+    boolean paused = false;
     
     Map<ProcessId, Node> nodes = new HashMap<ProcessId, Node>();
     Map<ProcessId, AntiEntropy> AEs = new HashMap<ProcessId, AntiEntropy>();
     BufferedReader  reader;
     ProcessId connected;
-    final ProcessId primary;
-    boolean paused = false;
+    final ProcessId primary = new ProcessId("Process:0", false);
     
     public Env () {
         reader = new BufferedReader (new InputStreamReader (System.in));
-        
-        primary = new ProcessId("Process:0", false);
-        PrimaryNode primaryNode = new PrimaryNode(primary, this);
-        nodes.put(primary, primaryNode);
-        connected = primary;
+    }
+    
+    private void startPrimary () {
+        PrimaryNode newNode = new PrimaryNode(primary, this);
+        nodes.put(primary, newNode);
         print("Added primary node:\t" + primary);
-        primaryNode.start();
+        newNode.start();
+        connect(primary);
     }
     
     public synchronized void sendMessage (ProcessId dst, BayouMessage m) {
@@ -140,7 +145,6 @@ public class Env {
     }
     
     private String getNextInput() {
-        System.out.print("BAYOU$ ");
         String line;
         try {
             line = reader.readLine();
@@ -152,6 +156,7 @@ public class Env {
     }
     
     public void run (String[] args) {
+        startPrimary();
         while (true) {
             String input = getNextInput();
             if (!InputParser.parseInput(input, this)) {

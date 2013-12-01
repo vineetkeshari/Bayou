@@ -19,7 +19,7 @@ public class AntiEntropy extends Thread {
     @Override
     public void run() {
         env.AEs.put(pID, this);
-        sendMessage(dest, new GetStateMessage(pID));
+        sendMessage(dest, new GetStateMessage(pID, parent.pID));
         body();
         retire();
     }
@@ -42,7 +42,7 @@ public class AntiEntropy extends Thread {
                 VectorClock destVC = m.vectorClock;
                 
                 if (parent.OSN > destCSN) {
-                    // handle truncating logs
+                    sendMessage (dest, new DBUpdateMessage (pID, parent.pID, parent.omitDB, parent.omitVC, parent.OSN));
                 }
                 
                 if (destCSN < parent.CSN) {
@@ -52,7 +52,7 @@ public class AntiEntropy extends Thread {
                             canSend = true;
                         if (canSend) {
                             if (destVC.containsKey(parent.pID) && u.created <= destVC.get(parent.pID))
-                                sendMessage (dest, new CommitMessage(pID, u));
+                                sendMessage (dest, new CommitMessage(pID, parent.pID, u));
                             else
                                 sendMessage(dest, new ActionUpdateMessage(pID, parent.pID, u));
                         }
