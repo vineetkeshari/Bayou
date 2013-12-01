@@ -8,7 +8,7 @@ import java.util.*;
 public class Env {
     final static boolean DEBUG = false;
     public static final long DELAY = 0;
-    public static final int LOGSIZE = 1;
+    public static final int LOGSIZE = 5;
     
     static final ProcessId envPID = new ProcessId("ENV", false);
     
