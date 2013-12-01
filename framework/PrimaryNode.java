@@ -31,8 +31,6 @@ public class PrimaryNode extends Node {
 
     @Override
     protected void handle (BayouMessage msg) {
-        if (env.DEBUG)
-            print("CSN: " + CSN + "\t" + "OSN: " + OSN + "\nDB:" + db + "\nomitDB:" + omitDB + "\nVC:" + vectorClock + "\nomitVC:" + omitVC + "\nLog:" + log);
         if (msg instanceof RetireMessage) {
             handleRetire((RetireMessage)msg);
         } else if (msg instanceof GetStateMessage) {

@@ -135,6 +135,11 @@ public class Env {
             nodes.get(pID).printDB();
     }
     
+    public synchronized void debug(ProcessId pID) {
+        if (nodes.containsKey(pID))
+            nodes.get(pID).debug();
+    }
+    
     public synchronized void connect (ProcessId pID) {
         if (nodes.containsKey(pID)) {
             connected = pID;

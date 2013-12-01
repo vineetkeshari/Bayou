@@ -35,6 +35,8 @@ public class InputParser {
                 env.printLog(generatePID(parts[1]));
             } else if (parts[0].equals("PRINTDB")) {
                 env.printDB(generatePID(parts[1]));
+            } else if (parts[0].equals("DEBUG")) {
+                env.debug(generatePID(parts[1]));
             } else if (parts[0].equals("CONNECT")) {
                 env.connect(generatePID(parts[1]));
             } else if (parts[0].equals("REMOVE")) {

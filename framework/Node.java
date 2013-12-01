@@ -58,8 +58,6 @@ public class Node extends Thread {
     }
     
     protected void handle (BayouMessage msg) {
-        if (env.DEBUG)
-            print("CSN: " + CSN + "\t" + "OSN: " + OSN + "\nDB:" + db + "\nomitDB:" + omitDB + "\nVC:" + vectorClock + "\nomitVC:" + omitVC + "\nLog:" + log);
         if (msg instanceof RetireMessage) {
             handleRetire((RetireMessage)msg);
         } else if (msg instanceof GetStateMessage) {
@@ -219,6 +217,10 @@ public class Node extends Thread {
         } catch (InterruptedException e) {
             print("InterruptedException is sleep!");
         }
+    }
+    
+    protected void debug() {
+        print("CSN: " + CSN + "\t" + "OSN: " + OSN + "\nDB:" + db + "\nomitDB:" + omitDB + "\nVC:" + vectorClock + "\nomitVC:" + omitVC + "\nLog:" + log);
     }
     
     public String toString () {
