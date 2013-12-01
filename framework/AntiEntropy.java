@@ -36,7 +36,7 @@ public class AntiEntropy extends Thread {
     private void handle (BayouMessage msg) {
         if (msg instanceof StateMessage) {
             StateMessage m = (StateMessage)msg;
-            print(m.toString());
+            //print(m.toString());
             if (msg.src.equals(dest)) {
                 long destCSN = m.CSN;
                 VectorClock destVC = m.vectorClock;

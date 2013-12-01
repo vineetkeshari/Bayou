@@ -19,6 +19,8 @@ public class Node extends Thread {
     VectorClock vectorClock = new VectorClock(), omitVC = new VectorClock();
     long CSN = 0, OSN = 0;
     
+    Propagator propagator;
+    
     boolean ignoring = false;
     boolean paused = false;
     boolean alive = true;
@@ -26,6 +28,12 @@ public class Node extends Thread {
     public Node(ProcessId pID, Env env) {
         this.pID = pID;
         this.env = env;
+        startPropagator();
+    }
+    
+    protected void startPropagator() {
+        propagator = new Propagator(pID, this);
+        propagator.start();
     }
     
     @Override
@@ -77,30 +85,30 @@ public class Node extends Thread {
     }
     
     protected void handleRetire (RetireMessage m) {
-        print(m.toString());
+        //print(m.toString());
         if (m.src.equals(env.envPID))
             retire();
     }
     
     protected void handleGetState (GetStateMessage m) {
-        print(m.toString());
+        //print(m.toString());
         sendMessage(m.src, new StateMessage(pID, vectorClock, CSN));
     }
     
     protected void handleAction (ActionMessage m) {
-        print(m.toString());
+        //print(m.toString());
         write (m.update);
         propagate ();
     }
     
     protected void handleActionUpdate (ActionUpdateMessage m) {
-        print(m.toString());
+        //print(m.toString());
         write (m.update);
         commitPending();
     }
     
     protected void handleDBUpdate (DBUpdateMessage m) {
-        print(m.toString());
+        //print(m.toString());
         CSN = m.OSN; OSN = m.OSN;
         db = m.db.clone(); omitDB = m.db.clone();
         vectorClock = m.omitVC.clone(); omitVC = m.omitVC.clone();
@@ -110,6 +118,13 @@ public class Node extends Thread {
                 newLog.add(u);
         }
         log = newLog;
+        commitPending();
+    }
+    
+    protected void handleCommit (CommitMessage m) {
+        //print(m.toString());
+        log.remove(m.update);
+        log.add(m.update);
         commitPending();
     }
     
@@ -133,13 +148,6 @@ public class Node extends Thread {
             }
         }
         log = newLog;
-    }
-    
-    protected void handleCommit (CommitMessage m) {
-        print(m.toString());
-        log.remove(m.update);
-        log.add(m.update);
-        commitPending();
     }
     
     protected void commitPending () {
@@ -183,6 +191,7 @@ public class Node extends Thread {
             print ("InterruptedException in sleep!");
         }
         alive = false;
+        propagator.alive = false;
         env.nodes.remove(pID);
     }
     
