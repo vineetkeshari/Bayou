@@ -70,7 +70,7 @@ public class InputParser {
     }
     
     private static ProcessId generatePID (String pID) {
-        return new ProcessId ("Process:" + pID, false);
+        return new ProcessId ("P" + pID, false);
     }
     
     private static void print (String s) {

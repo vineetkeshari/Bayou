@@ -23,7 +23,7 @@ public class Env {
     Map<ProcessId, AntiEntropy> AEs = new HashMap<ProcessId, AntiEntropy>();
     BufferedReader  reader;
     ProcessId connected;
-    final ProcessId primary = new ProcessId("Process:0", false);
+    final ProcessId primary = new ProcessId("P0", false);
     
     public Env () {
         reader = new BufferedReader (new InputStreamReader (System.in));

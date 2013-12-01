@@ -40,7 +40,7 @@ public class AntiEntropy extends Thread {
             if (msg.src.equals(dest)) {
                 long destCSN = m.CSN;
                 VectorClock destVC = m.vectorClock;
-                
+                print("Parent OSN: " + parent.OSN);
                 if (parent.OSN > destCSN) {
                     sendMessage (dest, new DBUpdateMessage (pID, parent.pID, parent.omitDB, parent.omitVC, parent.OSN));
                 }

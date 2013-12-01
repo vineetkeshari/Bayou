@@ -103,9 +103,9 @@ public class Node extends Thread {
     
     protected void handleDBUpdate (DBUpdateMessage m) {
         print(m.toString());
-        db = m.db; omitDB = m.db;
         CSN = m.OSN; OSN = m.OSN;
-        vectorClock = m.omitVC; omitVC = m.omitVC;
+        db = m.db.clone(); omitDB = m.db.clone();
+        vectorClock = m.omitVC.clone(); omitVC = m.omitVC.clone();
         Set<Update> newLog = new TreeSet<Update>();
         for (Update u : log) {
             if (!vectorClock.containsKey(u.server) || u.created >= vectorClock.get(u.server))
@@ -127,7 +127,7 @@ public class Node extends Thread {
             if (discarding) {
                 u.operation.perform(omitDB);
                 if (u.CSN > OSN)
-                    OSN = CSN;
+                    OSN = u.CSN;
                 if (!omitVC.containsKey(u.server) || u.created > omitVC.get(u.server))
                     omitVC.put(u.server, u.created);
             } else {

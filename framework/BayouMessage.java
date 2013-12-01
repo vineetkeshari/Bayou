@@ -39,7 +39,7 @@ class StateMessage extends BayouMessage {
         this.CSN = CSN;
     }
     public String toString() {
-        return "\t[MESSAGE]\tSTATE\t" + String.valueOf(src) + "\t" + vectorClock; 
+        return "\t[MESSAGE]\tSTATE\t" + String.valueOf(src) + "\t" + CSN + "\t" + vectorClock; 
     }
 }
 
@@ -74,7 +74,7 @@ class DBUpdateMessage extends AntiEntropyMessage {
         this.OSN = OSN;
     }
     public String toString() {
-        return "\t[MESSAGE]\tDBUPDATE\t" + String.valueOf(src) + "\t" + OSN + omitVC + db; 
+        return "\t[MESSAGE]\tDBUPDATE\t" + String.valueOf(src) + "\t" + OSN + omitVC + "\n" + db; 
     }
 }
 
