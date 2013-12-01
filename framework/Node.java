@@ -243,7 +243,7 @@ public class Node extends Thread {
     }
     
     protected void print (String s) {
-        System.out.println("[" + pID + "]\t" + System.currentTimeMillis() + "\t" + s);
+        System.out.println("\t[" + pID + "]\t" + System.currentTimeMillis() + "\t" + s);
     }
     
 }

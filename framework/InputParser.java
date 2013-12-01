@@ -76,7 +76,7 @@ public class InputParser {
     }
     
     private static void print (String s) {
-        System.out.println ("[PARSER]\t" + System.currentTimeMillis() + "\t" + s);
+        System.out.println ("\t[PARSER]\t" + System.currentTimeMillis() + "\t" + s);
     }
 
 }

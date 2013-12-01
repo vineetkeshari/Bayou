@@ -172,7 +172,7 @@ public class Env {
     }
     
     private void print (String s) {
-        System.out.println("[ENV]\t" + System.currentTimeMillis() + "\t" + s);
+        System.out.println("\t[ENV]\t" + System.currentTimeMillis() + "\t" + s);
     }
     
     private void die() {
