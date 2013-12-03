@@ -1,10 +1,11 @@
 package playlist;
 
+import java.util.Collections;
 import java.util.Map;
 import java.util.HashMap;
 
 public class Playlist {
-    Map<String,String> songs = new HashMap<String,String>();
+    Map<String,String> songs =  Collections.synchronizedMap(new HashMap<String,String>());
 
     public boolean addSong (String song, String url) {
         if (!songs.containsKey(song)) {

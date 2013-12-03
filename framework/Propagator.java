@@ -16,10 +16,10 @@ public class Propagator extends Thread {
             try {
                 sleep(SLEEPTIME);
             } catch (InterruptedException e) {
-                System.out.println("Propagator " + pID + " interrupted!");
+                System.out.println("\t[Propagator " + pID + "]\tSleep Interrupted!");
             }
             while (server.getState() != Thread.State.WAITING);
-            System.out.println("\tPropogating from " + pID + "...");
+            //System.out.println("\tPropogating from " + pID + "...");
             server.propagate();
         }
     }

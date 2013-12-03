@@ -47,7 +47,7 @@ public class PrimaryNode extends Node {
 
     @Override
     protected void handleAction (ActionMessage m) {
-        //print(m.toString());
+        print(m.toString());
         write (m.update);
         updateCommits();
         propagate();
@@ -55,7 +55,7 @@ public class PrimaryNode extends Node {
 
     @Override
     protected void handleActionUpdate (ActionUpdateMessage m) {
-        //print(m.toString());
+        print(m.toString());
         write (m.update);
         updateCommits();
         propagate();

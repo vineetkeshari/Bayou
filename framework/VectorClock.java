@@ -1,11 +1,12 @@
 package framework;
 
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 
 public class VectorClock {
-    Map<ProcessId, Long> clock = new HashMap<ProcessId, Long>();
+    Map<ProcessId, Long> clock = Collections.synchronizedMap(new HashMap<ProcessId, Long>());
     
     public void put (ProcessId p, long l) {
         clock.put(p,l);

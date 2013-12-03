@@ -59,7 +59,7 @@ public class AntiEntropy extends Thread {
                 }
                 
                 for (Update u : parent.log) {
-                    if (!destVC.containsKey(parent.pID) || destVC.get(parent.pID) < u.created) {
+                    if (!destVC.containsKey(u.server) || destVC.get(u.server) < u.created) {
                         sendMessage(dest, new ActionUpdateMessage(pID, parent.pID, u));
                     }
                 }

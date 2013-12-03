@@ -22,4 +22,8 @@ public class ProcessId implements Comparable {
 	}
 
 	public String toString(){ return name; }
+	
+	public int compareTo (ProcessId other) {
+	    return name.compareTo(other.name);
+	}
 }

@@ -36,9 +36,12 @@ public class Update implements Comparable<Update> {
             return -1;
         if (CSN > other.CSN)
             return 1;
-        if (!server.equals(other.server))
+        if (CSN != INFINITY)
             return 0;
-        return (int)(created - other.created);
+        if (created != other.created)
+            return (int)(created - other.created);
+        return (int)(server.compareTo(other.server));
+            
     }
 
 }

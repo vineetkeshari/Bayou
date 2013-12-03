@@ -1,5 +1,6 @@
 package framework;
 
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
@@ -12,9 +13,9 @@ public class Node extends Thread {
     ProcessId pID;
     Env env;
     Queue<BayouMessage> inbox = new Queue<BayouMessage>();
-    Set<ProcessId> microIgnore = new HashSet<ProcessId>();
+    Set<ProcessId> microIgnore = Collections.synchronizedSet(new HashSet<ProcessId>());
 
-    Set<Update> log = new TreeSet<Update>();
+    Set<Update> log = Collections.synchronizedSortedSet(new TreeSet<Update>());
     Playlist db = new Playlist(), omitDB = new Playlist();
     VectorClock vectorClock = new VectorClock(), omitVC = new VectorClock();
     long CSN = 0, OSN = 0;
@@ -96,23 +97,30 @@ public class Node extends Thread {
     }
     
     protected void handleAction (ActionMessage m) {
-        //print(m.toString());
+        print(m.toString());
         write (m.update);
+        commitPending();
         propagate ();
     }
     
     protected void handleActionUpdate (ActionUpdateMessage m) {
-        //print(m.toString());
+        print(m.toString());
         write (m.update);
         commitPending();
     }
     
+    protected void handleCommit (CommitMessage m) {
+        print(m.toString());
+        write(m.update);
+        commitPending();
+    }
+    
     protected void handleDBUpdate (DBUpdateMessage m) {
-        //print(m.toString());
+        print(m.toString());
         CSN = m.OSN; OSN = m.OSN;
         db = m.db.clone(); omitDB = m.db.clone();
         vectorClock = m.omitVC.clone(); omitVC = m.omitVC.clone();
-        Set<Update> newLog = new TreeSet<Update>();
+        Set<Update> newLog = Collections.synchronizedSortedSet(new TreeSet<Update>());
         for (Update u : log) {
             if (!vectorClock.containsKey(u.server) || u.created >= vectorClock.get(u.server))
                 newLog.add(u);
@@ -121,16 +129,35 @@ public class Node extends Thread {
         commitPending();
     }
     
-    protected void handleCommit (CommitMessage m) {
-        //print(m.toString());
-        log.remove(m.update);
-        log.add(m.update);
-        commitPending();
+    protected void write (Update update) {
+        log.remove(update);
+        log.add(update);
+        if (!vectorClock.containsKey(update.server) || update.created > vectorClock.get(update.server))
+            vectorClock.put(update.server, update.created);
+    }
+    
+    protected void commitPending () {
+        boolean canCommit = false;
+        for (Update u : log) {
+            if (!canCommit && u.CSN > CSN)
+                canCommit = true;
+            if (canCommit)
+                if (u.CSN == CSN+1) {
+                    commit(u);
+                    CSN = u.CSN;
+                } else
+                    break;
+        }
+        discardLog();
+    }
+    
+    protected void commit (Update update) {
+        update.operation.perform(db);
     }
     
     protected void discardLog () {
         Iterator<Update> it = log.iterator();
-        Set<Update> newLog = new TreeSet<Update>();
+        Set<Update> newLog = Collections.synchronizedSortedSet(new TreeSet<Update>());
         boolean discarding = true;
         for (int i=0; it.hasNext(); ++i) {
             Update u = it.next();
@@ -150,37 +177,12 @@ public class Node extends Thread {
         log = newLog;
     }
     
-    protected void commitPending () {
-        boolean canCommit = false;
-        for (Update u : log) {
-            if (!canCommit && u.CSN > CSN)
-                canCommit = true;
-            if (canCommit)
-                if (u.CSN == CSN+1) {
-                    commit(u);
-                    CSN = u.CSN;
-                } else
-                    break;
-        }
-        discardLog();
-    }
-    
-    protected void write (Update update) {
-        log.add(update);
-        if (!vectorClock.containsKey(update.server) || update.created > vectorClock.get(update.server))
-            vectorClock.put(update.server, update.created);
-    }
-    
     protected void propagate () {
         for (ProcessId p : env.nodes.keySet()) {
             if (!p.equals(pID)) {
                 new AntiEntropy (this, p, env).start();
             }
         }
-    }
-    
-    protected void commit (Update update) {
-        update.operation.perform(db);
     }
     
     private void retire () {
@@ -229,7 +231,13 @@ public class Node extends Thread {
     }
     
     protected void debug() {
-        print("CSN: " + CSN + "\t" + "OSN: " + OSN + "\nDB:" + db + "\nomitDB:" + omitDB + "\nVC:" + vectorClock + "\nomitVC:" + omitVC + "\nLog:" + log);
+        print("CSN: " + CSN + "\t" + "OSN: " + OSN);
+        print("Isolated: " + ignoring + "\tIgnoring: " + microIgnore);
+        print("DB:" + db);
+        print("omitDB:" + omitDB);
+        print("VC:" + vectorClock);
+        print("omitVC:" + omitVC);
+        printLog();
     }
     
     public String toString () {
