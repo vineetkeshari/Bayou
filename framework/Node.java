@@ -161,7 +161,7 @@ public class Node extends Thread {
         boolean discarding = true;
         for (int i=0; it.hasNext(); ++i) {
             Update u = it.next();
-            if (u.CSN == Update.INFINITY || i+env.LOGSIZE >= log.size()) {
+            if (discarding && (u.CSN == Update.INFINITY || i+env.LOGSIZE >= log.size())) {
                 discarding = false;
             }
             if (discarding) {
